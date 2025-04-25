@@ -15,8 +15,8 @@ client = OpenAI(
 )
 
 # Set up Streamlit page
-st.set_page_config(page_title="Ethnic LLM", layout="wide")
-st.title("💬 Chat with NVIDIA Nemotron (LLama 3.3 Super 49B) by AES")
+st.set_page_config(page_title="Vedantra", layout="wide")
+st.title("💬 Chat with Vedantra by AES")
 
 # Initialize session state for messages
 if "messages" not in st.session_state:
