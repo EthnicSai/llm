@@ -38,24 +38,18 @@ def document_qa(doc_text, question):
     {question}
     """
 
-    # Call the API with the prompt
+    # Call the API without streaming
     completion = client.chat.completions.create(
-        model="nvidia/llama-3.3-nemotron-super-49b-v1",  # Specify the model
+        model="nvidia/llama-3.3-nemotron-super-49b-v1",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.6,
         top_p=0.95,
         max_tokens=2048,
-        stream=True
+        stream=False  # Disable streaming
     )
 
-    # Collect the response from the stream
-    response = ""
-    for chunk in completion:
-        if chunk.choices[0].delta.content is not None:
-            response += chunk.choices[0].delta.content
-            # Stream the response in real-time
-            st.write(chunk.choices[0].delta.content, end="")  # Display it in Streamlit
-
+    # Get the final response content
+    response = completion.choices[0].message.content
     return response
 
 # 4. Streamlit app setup
@@ -64,7 +58,7 @@ def main():
     st.set_page_config(page_title="Document QA App", layout="wide")
 
     # Title of the web app
-    st.title("Document Question Answering with NVIDIA Llama-3")
+    st.title("Document Question Answering with NVIDIA Llama-3 by AES")
 
     # Ensure the "documents" directory exists
     if not os.path.exists("documents"):
@@ -105,7 +99,8 @@ def main():
                 st.write("Answering the question...")
                 with st.spinner("Processing..."):
                     answer = document_qa(doc_text, question)
-                    st.write("Full Answer:", answer)
+                    st.subheader("Answer:")
+                    st.write(answer)
             else:
                 st.warning("Please enter a question.")
 
