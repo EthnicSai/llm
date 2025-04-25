@@ -2,6 +2,7 @@ import streamlit as st
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
+import re
 
 # Load .env file
 load_dotenv()
@@ -14,7 +15,7 @@ client = OpenAI(
 )
 
 # Set up Streamlit page
-st.set_page_config(page_title="NVIDIA LLM Chat", layout="wide")
+st.set_page_config(page_title="Ethnic LLM", layout="wide")
 st.title("💬 Chat with NVIDIA Nemotron (LLama 3.3 Super 49B) by AES")
 
 # Initialize session state for messages
@@ -27,7 +28,13 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     if msg["role"] != "system":
         with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+            # Split message into visible and hidden <think> parts
+            main_response = re.sub(r"<think>.*?</think>", "", msg["content"], flags=re.DOTALL).strip()
+            think_match = re.search(r"<think>(.*?)</think>", msg["content"], flags=re.DOTALL)
+            st.markdown(main_response)
+            if think_match:
+                with st.expander("🧠 Show inner thinking"):
+                    st.markdown(think_match.group(1).strip())
 
 # Input box
 user_input = st.chat_input("Type your message here...")
@@ -59,8 +66,18 @@ if user_input:
             delta = chunk.choices[0].delta.content
             if delta:
                 full_response += delta
-                response_placeholder.markdown(full_response + "▌")
+                # Preview without thinking
+                clean_preview = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
+                response_placeholder.markdown(clean_preview + "▌")
 
-        # Final response render
-        response_placeholder.markdown(full_response)
+        # Final rendering
+        main_response = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
+        think_match = re.search(r"<think>(.*?)</think>", full_response, flags=re.DOTALL)
+
+        response_placeholder.markdown(main_response)
+        if think_match:
+            with st.expander("🧠 Show inner thinking"):
+                st.markdown(think_match.group(1).strip())
+
+        # Save assistant message
         st.session_state.messages.append({"role": "assistant", "content": full_response})
